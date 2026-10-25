@@ -1,0 +1,17 @@
+{
+  "name": "skillnest",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "backend:install": "cd backend && npm install",
+    "backend:generate": "cd backend && npm run db:generate",
+    "backend:migrate": "cd backend && npm run db:migrate",
+    "backend:seed": "cd backend && npm run db:seed",
+    "backend:test": "cd backend && npm run test",
+    "backend:build": "cd backend && npm run build",
+    "backend:typecheck": "cd backend && npm run typecheck"
+  },
+  "workspaces": []
+}

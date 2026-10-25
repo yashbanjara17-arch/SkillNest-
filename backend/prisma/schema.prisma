@@ -1,0 +1,456 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  client
+  freelancer
+  admin
+}
+
+enum AccountStatus {
+  Active
+  Suspended
+  PendingVerification
+}
+
+enum ProjectStatus {
+  Open
+  InDiscussion
+  Assigned
+  Completed
+  Flagged
+}
+
+enum ProposalStatus {
+  Pending
+  Accepted
+  Negotiating
+  Declined
+}
+
+enum InquiryStatus {
+  Unread
+  Replied
+  DealAgreed
+}
+
+enum ReviewModerationStatus {
+  Pending
+  Published
+  Flagged
+}
+
+enum FreelancerAvailability {
+  AvailableImmediately
+  PartTimeAvailable
+  BookedAvailableNextMonth
+  WeekendsOnly
+}
+
+enum FreelancerCategory {
+  WebAndAppDevelopment
+  UIUXAndGraphicDesign
+  DigitalMarketingAndSEO
+  VideoAndMediaProduction
+  IndustrialAndCADEngineering
+  ContentAndCopywriting
+}
+
+enum ContactPreference {
+  PhoneAndWhatsApp
+  EmailAndSkillNestDirect
+  InPersonMeetingFirst
+}
+
+enum MeetingPreference {
+  InPersonLocal
+  PhoneCall
+  VideoMeeting
+}
+
+enum PreferredWorkerType {
+  IndividualFreelancer
+  AgencyFreelanceTeam
+  Any
+}
+
+// ─── User & Auth ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         UserRole
+  status       AccountStatus @default(Active)
+  avatarUrl    String?
+  location     String?
+  phone        String?
+  bio          String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  clientProfile     ClientProfile?
+  freelancerProfile FreelancerProfile?
+  sessions          UserSession[]
+  savedFreelancers  SavedFreelancer[]
+  savedProjects     SavedProject[]
+  sentMessages      Message[]
+  auditLogs         AdminAuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model UserSession {
+  sid    String   @id
+  sess   Json
+  expire DateTime
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expire])
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+// ─── Client Profile ──────────────────────────────────────────────────────────
+
+model ClientProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  organization     String?
+  businessType     String?
+  gstNumber        String?
+  tradeLicenseNo   String?
+  businessAddress  String?
+  contactPerson    String?
+  preferredContact String?
+  websiteUrl       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
+  inquiries Inquiry[]
+
+  @@index([userId])
+  @@map("client_profiles")
+}
+
+// ─── Freelancer Profile ───────────────────────────────────────────────────────
+
+model FreelancerProfile {
+  id                      String                @id @default(cuid())
+  userId                  String                @unique
+  headline                String?
+  bio                     String?
+  avatarUrl               String?
+  location                String?
+  areaName                String?
+  distanceFromBoisarKm    Float?
+  isTeam                  Boolean               @default(false)
+  teamSize                Int?
+  teamMemberNames         String[]
+  hourlyRateInr           Int?
+  startingProjectRateInr  Int?
+  rating                  Float                 @default(0)
+  reviewCount             Int                   @default(0)
+  availability            FreelancerAvailability @default(AvailableImmediately)
+  experienceYears         Int                   @default(0)
+  category                FreelancerCategory?
+  languages               String[]
+  verifiedLocal           Boolean               @default(false)
+  completedProjectsCount  Int                   @default(0)
+  contactPreference       ContactPreference     @default(EmailAndSkillNestDirect)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills         FreelancerSkill[]
+  portfolio      PortfolioItem[]
+  services       FreelancerService[]
+  proposals      Proposal[]
+  inquiries      Inquiry[]
+  reviews        Review[]
+  savedBy        SavedFreelancer[]
+
+  @@index([userId])
+  @@index([areaName])
+  @@index([category])
+  @@index([availability])
+  @@index([verifiedLocal])
+  @@map("freelancer_profiles")
+}
+
+// ─── Skills ───────────────────────────────────────────────────────────────────
+
+model Skill {
+  id   String @id @default(cuid())
+  name String @unique
+
+  freelancers FreelancerSkill[]
+  projects    ProjectSkill[]
+
+  @@index([name])
+  @@map("skills")
+}
+
+model FreelancerSkill {
+  freelancerId String
+  skillId      String
+
+  freelancer FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  skill      Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([freelancerId, skillId])
+  @@map("freelancer_skills")
+}
+
+// ─── Portfolio ────────────────────────────────────────────────────────────────
+
+model PortfolioItem {
+  id              String @id @default(cuid())
+  freelancerId    String
+  title           String
+  description     String
+  imageUrl        String?
+  category        String?
+  completionYear  String?
+  clientType      String?
+  skillsUsed      String[]
+  liveUrl         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  freelancer FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerId])
+  @@map("portfolio_items")
+}
+
+// ─── Freelancer Services ──────────────────────────────────────────────────────
+
+model FreelancerService {
+  id                  String @id @default(cuid())
+  freelancerId        String
+  title               String
+  description         String
+  startingPriceInr    Int
+  deliveryTimeDays    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  freelancer FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerId])
+  @@map("freelancer_services")
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+model Project {
+  id                  String              @id @default(cuid())
+  clientProfileId     String
+  title               String
+  category            String
+  description         String
+  clientLocation      String?
+  preferredArea       String?
+  budgetMinInr        Int
+  budgetMaxInr        Int
+  isBudgetNegotiable  Boolean             @default(true)
+  timeline            String?
+  preferredWorkerType PreferredWorkerType @default(Any)
+  status              ProjectStatus       @default(Open)
+  contactPreference   String?
+  proposalsCount      Int                 @default(0)
+
+  postedDate  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  clientProfile ClientProfile @relation(fields: [clientProfileId], references: [id])
+  skills        ProjectSkill[]
+  proposals     Proposal[]
+  savedBy       SavedProject[]
+
+  @@index([clientProfileId])
+  @@index([status])
+  @@index([category])
+  @@index([preferredArea])
+  @@map("projects")
+}
+
+model ProjectSkill {
+  projectId String
+  skillId   String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+  @@map("project_skills")
+}
+
+// ─── Proposals ────────────────────────────────────────────────────────────────
+
+model Proposal {
+  id                String         @id @default(cuid())
+  projectId         String
+  freelancerId      String
+  proposedPriceInr  Int
+  estimatedTimeline String
+  coverMessage      String
+  status            ProposalStatus @default(Pending)
+
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  freelancer FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, freelancerId]) // Prevent duplicate proposals
+  @@index([projectId])
+  @@index([freelancerId])
+  @@map("proposals")
+}
+
+// ─── Inquiries & Messages ─────────────────────────────────────────────────────
+
+model Inquiry {
+  id                String          @id @default(cuid())
+  freelancerId      String
+  clientProfileId   String
+  projectTitle      String
+  initialMessage    String
+  proposedBudgetInr Int?
+  meetingPreference MeetingPreference @default(InPersonLocal)
+  status            InquiryStatus   @default(Unread)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  freelancer    FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  clientProfile ClientProfile     @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  messages      Message[]
+
+  @@index([freelancerId])
+  @@index([clientProfileId])
+  @@map("inquiries")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  inquiryId String
+  senderId  String
+  content   String
+  sentAt    DateTime @default(now())
+
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  sender  User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([inquiryId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+
+model Review {
+  id              String                 @id @default(cuid())
+  freelancerId    String
+  clientName      String
+  clientCompany   String?
+  clientLocation  String?
+  rating          Float
+  comment         String
+  projectTitle    String?
+  verified        Boolean                @default(false)
+  moderationStatus ReviewModerationStatus @default(Published)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  freelancer FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerId])
+  @@index([moderationStatus])
+  @@map("reviews")
+}
+
+// ─── Saved Items ──────────────────────────────────────────────────────────────
+
+model SavedFreelancer {
+  userId       String
+  freelancerId String
+  savedAt      DateTime @default(now())
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  freelancer FreelancerProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@id([userId, freelancerId])
+  @@index([userId])
+  @@map("saved_freelancers")
+}
+
+model SavedProject {
+  userId    String
+  projectId String
+  savedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@index([userId])
+  @@map("saved_projects")
+}
+
+// ─── Platform Settings ────────────────────────────────────────────────────────
+
+model PlatformSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+// ─── Admin Audit Log ──────────────────────────────────────────────────────────
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String?
+  targetId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}

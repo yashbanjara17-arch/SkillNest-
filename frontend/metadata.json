@@ -1,0 +1,6 @@
+{
+  "name": "SkillNest - Local Freelance Marketplace",
+  "description": "The Right Skills, Right Around You. A local-first freelance marketplace connecting businesses with verified professionals and teams in Boisar, Palghar, and beyond.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

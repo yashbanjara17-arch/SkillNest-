@@ -1,0 +1,67 @@
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Product Name: SkillNest
+Tagline: The Right Skills, Right Around You.
+Initial Target Market: Boisar, Palghar, Tarapur MIDC, and surrounding regions in Maharashtra.
+
+1. EXECUTIVE SUMMARY & OBJECTIVE
+SkillNest is a local-first freelance marketplace designed to connect businesses with verified professionals and teams based on skills, location, portfolio, ratings, and availability.
+Unlike global platforms that charge 10-20% commission and disallow in-person coordination, SkillNest allows local business owners (cafe/restaurant owners, gyms, manufacturing units, shopkeepers, local clinics) to discover nearby talent, review local portfolios, contact them directly, and negotiate project prices and milestone terms with 0% platform transaction fees.
+
+2. TARGET AUDIENCE & PERSONAS
+A. Clients / Business Owners (Primary non-technical focus):
+   - Local cafe, restaurant, bakery, and food outlet owners needing websites, QR menus, or local SEO.
+   - Gym, fitness center, dental clinic, and coaching class owners needing branding and Instagram campaigns.
+   - Factory, chemical manufacturing, and machine shop managers in Tarapur MIDC needing inventory software, CAD drawings, or corporate drone videos.
+   - Requirement: Simple, plain language, intuitive workflows, visible examples, zero technical jargon.
+
+B. Freelancers & Freelance Teams:
+   - Solo developers, designers, videographers, CAD engineers, copywriters.
+   - Creative collectives and boutique agencies (e.g., 2-4 member teams).
+   - Requirement: Professional workspace to showcase verified local work, discover projects, submit quotes, and manage client inquiries.
+
+C. Platform Administrators:
+   - Platform managers responsible for overseeing user growth, moderating project listings, inspecting reports, and ensuring local trust.
+   - Requirement: Dedicated, secure administrative console separate from client and freelancer workspaces.
+
+3. ROLE-BASED ACCESS & ROUTE ARCHITECTURE
+- Public Routes:
+  / - Landing Page with 21st.dev / Sera UI inspired glassmorphism design, hero, search, categories, comparison, workflow.
+  /freelancers - Find Freelancers directory with location, skill, availability, rating, and agency filters.
+  /freelancer/:id - Detailed Freelancer Profile with verified local portfolio gallery and enquiry modal.
+  /projects - Browse open projects with category and budget filters.
+  /project/:id - Project details with live local matching recommendations and proposal submission.
+  /how-it-works - Interactive workflow breakdown, comparison matrix, and FAQ.
+  /login & /signup - Clean authentication with role selection (Client vs Freelancer). (Admin registration is strictly prohibited through public forms).
+
+- Client Routes (Protected):
+  /dashboard/client - Client Workspace (Welcome, Post Project shortcut, active projects, inquiries, saved talent).
+  /post-project - Multi-step, non-technical project creation wizard with plain-language guidance and live matching preview.
+  /client/projects - My Projects with status toggles (Draft, Open, In Discussion, Assigned, Completed).
+  /client/messages - Conversations & direct project inquiries.
+  /client/saved - Bookmarked freelancers.
+  /client/profile - Business profile and contact preferences.
+
+- Freelancer Routes (Protected):
+  /dashboard/freelancer - Freelancer Workspace (Profile completion, active proposals, inquiries, portfolio quick-manager).
+  /freelancer/applications - Proposal tracker with statuses (Pending, In Discussion, Accepted, Declined).
+  /freelancer/portfolio - Portfolio management (add, edit, showcase local project deliveries).
+  /freelancer/inquiries - Direct client messages received.
+  /freelancer/saved - Saved project opportunities.
+  /freelancer/profile - Professional headline, bio, skills, services, rates, availability.
+
+- Admin Routes (Protected, Admin role only):
+  /admin - Executive Admin Dashboard (KPIs, role distribution, project activity metrics).
+  /admin/users - User management (search, filter by client/freelancer/admin, status toggling).
+  /admin/projects - Project moderation and inspection.
+  /admin/reviews - Review audit and moderation.
+  /admin/settings - System preferences & regional hub parameters.
+
+4. DESIGN SYSTEM: PREMIUM GLASSMORPHISM
+- Palette: Deep midnight navy / slate foundations (`#090D16`, `#0F172A`, `#1E293B`), crisp translucent glass layers (`bg-white/70`, `bg-slate-900/60`, `backdrop-blur-xl`), fine hairline borders (`border-white/10`, `border-slate-200/60`), vibrant cyan/violet/indigo accents (`#6366F1`, `#38BDF8`, `#8B5CF6`).
+- Readability first: Essential forms and text content maintain WCAG AA contrast (minimum 4.5:1 ratio).
+- Non-technical terminology: "What do you need help with?", "Your budget", "Find local experts", "Contact freelancer".
+
+5. BUSINESS MODEL & TERMS
+- Direct price negotiation: Price is mutually agreed upon by client and freelancer.
+- 0% platform commission on project transactions.
+- Future monetization: Optional verified badges, featured promotional placement, and business concierge packages.
