@@ -24,10 +24,9 @@ export const ClientDashboardPage: React.FC = () => {
   const myProjects = projects.filter(
     p => p.clientId === currentUser?.id || p.clientName === currentUser?.name
   );
-  const displayProjects = myProjects.length > 0 ? myProjects : projects.slice(0, 3);
 
   const receivedProposals = proposals.filter(prop => 
-    displayProjects.some(p => p.id === prop.projectId)
+    myProjects.some(p => p.id === prop.projectId)
   );
 
   const myInquiries = inquiries.filter(
@@ -93,7 +92,7 @@ export const ClientDashboardPage: React.FC = () => {
               <span>Your Active Projects</span>
               <Briefcase className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-2 tabular-nums">{displayProjects.length}</p>
+            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-2 tabular-nums">{myProjects.length}</p>
             <Link to="/client/projects" className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline mt-1 block font-medium">
               Manage your listings →
             </Link>
@@ -133,52 +132,71 @@ export const ClientDashboardPage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {displayProjects.map((proj) => {
-              const projectProposals = proposals.filter(p => p.projectId === proj.id);
-              return (
-                <div
-                  key={proj.id}
-                  className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs hover:border-indigo-300 dark:hover:border-indigo-500/50 shadow-xs transition-all"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-[11px]">
-                      <span className="text-indigo-600 dark:text-indigo-400 font-bold uppercase">{proj.category}</span>
-                      <span>·</span>
-                      <span>{proj.preferredArea}</span>
-                      <span>·</span>
-                      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{proj.status}</span>
+          {myProjects.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 text-center space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">You haven't posted any projects yet</h4>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto">
+                Post your project requirement in plain language to start receiving proposals from verified local talent.
+              </p>
+              <Link
+                to="/post-project"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition-colors"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Post Your First Project</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {myProjects.map((proj) => {
+                const projectProposals = proposals.filter(p => p.projectId === proj.id);
+                return (
+                  <div
+                    key={proj.id}
+                    className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs hover:border-indigo-300 dark:hover:border-indigo-500/50 shadow-xs transition-all"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-[11px]">
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold uppercase">{proj.category}</span>
+                        <span>·</span>
+                        <span>{proj.preferredArea}</span>
+                        <span>·</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{proj.status}</span>
+                      </div>
+                      <Link
+                        to={`/project/${proj.id}`}
+                        className="text-base font-bold text-neutral-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block"
+                      >
+                        {proj.title}
+                      </Link>
+                      <p className="text-neutral-600 dark:text-neutral-400 text-xs line-clamp-1">{proj.description}</p>
                     </div>
-                    <Link
-                      to={`/project/${proj.id}`}
-                      className="text-base font-bold text-neutral-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors block"
-                    >
-                      {proj.title}
-                    </Link>
-                    <p className="text-neutral-600 dark:text-neutral-400 text-xs line-clamp-1">{proj.description}</p>
-                  </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="text-right">
-                      <p className="font-bold text-neutral-900 dark:text-white text-xs tabular-nums">
-                        ₹{proj.budgetMinInr.toLocaleString('en-IN')} - ₹{proj.budgetMaxInr.toLocaleString('en-IN')}
-                      </p>
-                      <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
-                        {projectProposals.length} Proposals
-                      </p>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <p className="font-bold text-neutral-900 dark:text-white text-xs tabular-nums">
+                          ₹{proj.budgetMinInr.toLocaleString('en-IN')} - ₹{proj.budgetMaxInr.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                          {projectProposals.length} Proposals
+                        </p>
+                      </div>
+
+                      <Link
+                        to={`/project/${proj.id}`}
+                        className="px-3.5 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-semibold text-xs transition-colors"
+                      >
+                        Inspect
+                      </Link>
                     </div>
-
-                    <Link
-                      to={`/project/${proj.id}`}
-                      className="px-3.5 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-semibold text-xs transition-colors"
-                    >
-                      Inspect
-                    </Link>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Recommended Freelancers Section */}

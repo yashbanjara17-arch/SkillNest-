@@ -88,11 +88,17 @@ export const freelancersApi = {
   addPortfolio: (data: Record<string, unknown>) =>
     request<ApiResponse<unknown>>('/freelancers/me/portfolio', { method: 'POST', body: JSON.stringify(data) }),
 
+  updatePortfolio: (itemId: string, data: Record<string, unknown>) =>
+    request<ApiResponse<unknown>>(`/freelancers/me/portfolio/${itemId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
   deletePortfolio: (itemId: string) =>
     request<ApiResponse<null>>(`/freelancers/me/portfolio/${itemId}`, { method: 'DELETE' }),
 
   addService: (data: Record<string, unknown>) =>
     request<ApiResponse<unknown>>('/freelancers/me/services', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateService: (serviceId: string, data: Record<string, unknown>) =>
+    request<ApiResponse<unknown>>(`/freelancers/me/services/${serviceId}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   deleteService: (serviceId: string) =>
     request<ApiResponse<null>>(`/freelancers/me/services/${serviceId}`, { method: 'DELETE' }),

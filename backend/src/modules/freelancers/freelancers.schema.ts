@@ -15,16 +15,18 @@ export const freelancerQuerySchema = z.object({
 });
 
 export const updateFreelancerSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  avatarUrl: z.string().optional().or(z.literal('')).nullable(),
   headline: z.string().max(200).optional(),
   bio: z.string().max(2000).optional(),
   location: z.string().max(200).optional(),
   areaName: z.string().max(100).optional(),
   distanceFromBoisarKm: z.number().nonnegative().optional(),
   isTeam: z.boolean().optional(),
-  teamSize: z.number().int().positive().optional(),
+  teamSize: z.number().int().positive().optional().nullable(),
   teamMemberNames: z.array(z.string()).optional(),
-  hourlyRateInr: z.number().int().positive().optional(),
-  startingProjectRateInr: z.number().int().positive().optional(),
+  hourlyRateInr: z.number().int().nonnegative().optional(),
+  startingProjectRateInr: z.number().int().nonnegative().optional(),
   availability: z.enum([
     'AvailableImmediately',
     'PartTimeAvailable',
@@ -51,19 +53,19 @@ export const updateFreelancerSchema = z.object({
 
 export const portfolioItemSchema = z.object({
   title: z.string().min(2).max(200),
-  description: z.string().min(10).max(2000),
-  imageUrl: z.string().url().optional(),
-  category: z.string().max(100).optional(),
-  completionYear: z.string().max(4).optional(),
-  clientType: z.string().max(100).optional(),
+  description: z.string().min(5).max(2000),
+  imageUrl: z.string().min(1).optional().nullable(),
+  category: z.string().max(100).optional().nullable(),
+  completionYear: z.string().max(10).optional().nullable(),
+  clientType: z.string().max(100).optional().nullable(),
   skillsUsed: z.array(z.string()).optional().default([]),
-  liveUrl: z.string().url().optional(),
+  liveUrl: z.string().min(1).optional().or(z.literal('')).nullable(),
 });
 
 export const serviceSchema = z.object({
   title: z.string().min(2).max(200),
-  description: z.string().min(10).max(2000),
-  startingPriceInr: z.number().int().positive(),
+  description: z.string().min(5).max(2000),
+  startingPriceInr: z.number().int().nonnegative(),
   deliveryTimeDays: z.number().int().positive(),
 });
 

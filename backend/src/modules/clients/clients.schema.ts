@@ -14,7 +14,7 @@ export const updateClientProfileSchema = z.object({
   location: z.string().max(200).optional(),
   phone: z.string().max(20).optional(),
   bio: z.string().max(1000).optional(),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
+  avatarUrl: z.string().optional().or(z.literal('')).nullable(),
 });
 
 export type UpdateClientProfileInput = z.infer<typeof updateClientProfileSchema>;

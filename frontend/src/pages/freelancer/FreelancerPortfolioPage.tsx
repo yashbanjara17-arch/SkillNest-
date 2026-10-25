@@ -6,13 +6,37 @@ import { Modal } from '../../components/common/Modal';
 import { PlusCircle, Layers, Trash2, ExternalLink } from 'lucide-react';
 import { categoryTechDesign } from '../../assets/images';
 import { PortfolioItem } from '../../types';
+import { PhotoUpload } from '../../components/common/PhotoUpload';
 
 export const FreelancerPortfolioPage: React.FC = () => {
-  const { currentUser, freelancers, updateFreelancerProfile, addToast } = useApp();
+  const { currentUser, currentFreelancerProfile, addFreelancerPortfolioItem, deleteFreelancerPortfolioItem, addToast } = useApp();
 
-  const myProfile = freelancers.find(
-    f => f.name === currentUser?.name || f.id === currentUser?.id
-  ) || freelancers[0];
+  const myProfile = currentFreelancerProfile || {
+    id: `fl-${currentUser?.id}`,
+    name: currentUser?.name || 'Freelancer',
+    headline: '',
+    bio: '',
+    avatar: currentUser?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    location: currentUser?.location || 'Boisar, Maharashtra',
+    areaName: 'Boisar',
+    distanceFromBoisarKm: 0,
+    isTeam: false,
+    hourlyRateInr: 0,
+    startingProjectRateInr: 0,
+    rating: 0,
+    reviewCount: 0,
+    availability: 'Available Immediately' as const,
+    experienceYears: 0,
+    category: 'Web & App Development' as const,
+    skills: [],
+    languages: ['Marathi', 'Hindi', 'English'],
+    verifiedLocal: false,
+    portfolio: [],
+    services: [],
+    reviews: [],
+    completedProjectsCount: 0,
+    contactPreference: 'Phone & WhatsApp' as const,
+  };
 
   const [modalOpen, setModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -20,36 +44,30 @@ export const FreelancerPortfolioPage: React.FC = () => {
   const [newCategory, setNewCategory] = useState('Web Application');
   const [newClientType, setNewClientType] = useState('Local Manufacturing');
   const [newSkills, setNewSkills] = useState('React, Tailwind CSS, TypeScript');
+  const [newImage, setNewImage] = useState('');
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newItem: PortfolioItem = {
-      id: `port-${Date.now()}`,
+    await addFreelancerPortfolioItem({
       title: newTitle.trim(),
       description: newDesc.trim() || 'Custom solution delivered for local business partner in Maharashtra.',
-      imageUrl: categoryTechDesign,
+      imageUrl: newImage.trim() || categoryTechDesign,
       category: newCategory,
       completionYear: '2026',
       clientType: newClientType,
       skillsUsed: newSkills.split(',').map(s => s.trim()).filter(Boolean),
-    };
-
-    updateFreelancerProfile(myProfile.id, {
-      portfolio: [newItem, ...myProfile.portfolio],
     });
 
     setModalOpen(false);
     setNewTitle('');
     setNewDesc('');
+    setNewImage('');
   };
 
-  const handleDelete = (id: string) => {
-    updateFreelancerProfile(myProfile.id, {
-      portfolio: myProfile.portfolio.filter(p => p.id !== id),
-    });
-    addToast('Portfolio item removed', undefined, 'info');
+  const handleDelete = async (id: string) => {
+    await deleteFreelancerPortfolioItem(id);
   };
 
   return (
@@ -124,68 +142,80 @@ export const FreelancerPortfolioPage: React.FC = () => {
       >
         <form onSubmit={handleAdd} className="space-y-4 text-xs">
           <div>
-            <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Project Title</label>
+            <label className="sn-label">Project Title</label>
             <input
               type="text"
               required
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="e.g. Tarapur MIDC Inventory Tracker"
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+              className="sn-input"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Category</label>
+              <label className="sn-label">Category</label>
               <input
                 type="text"
                 required
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg outline-none"
+                className="sn-input"
               />
             </div>
             <div>
-              <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Client Type</label>
+              <label className="sn-label">Client Type</label>
               <input
                 type="text"
                 required
                 value={newClientType}
                 onChange={(e) => setNewClientType(e.target.value)}
                 placeholder="e.g. Manufacturing MSME"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg outline-none"
+                className="sn-input"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Description & Outcome</label>
+            <PhotoUpload
+              value={newImage}
+              onChange={setNewImage}
+              label="Work Sample Screenshot / Image"
+              helperText="Upload a screenshot or preview of your work directly from your device."
+              fallbackInitials="WORK"
+              shape="rounded"
+              size="md"
+            />
+          </div>
+
+          <div>
+            <label className="sn-label">Description & Outcome</label>
             <textarea
               rows={3}
               required
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               placeholder="What was built and how did it help the client..."
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg outline-none resize-none"
+              className="sn-textarea resize-none"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Skills Used (Comma-separated)</label>
+            <label className="sn-label">Skills Used (Comma-separated)</label>
             <input
               type="text"
               value={newSkills}
               onChange={(e) => setNewSkills(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg outline-none"
+              className="sn-input"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t sn-border-subtle">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
             >
               Cancel
             </button>

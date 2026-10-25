@@ -13,12 +13,16 @@ export const ClientMessagesPage: React.FC = () => {
   );
 
   const [selectedInquiryId, setSelectedInquiryId] = useState<string>(
-    myInquiries[0]?.id || inquiries[0]?.id || ''
+    myInquiries[0]?.id || ''
   );
   const [replyText, setReplyText] = useState('');
 
-  const activeInquiry = inquiries.find(i => i.id === selectedInquiryId) || inquiries[0];
+  const activeInquiry = myInquiries.find(i => i.id === selectedInquiryId) || myInquiries[0] || null;
   const targetFreelancer = activeInquiry ? freelancers.find(f => f.id === activeInquiry.freelancerId) : null;
+  const targetFreelancerName = targetFreelancer?.name || (activeInquiry as any)?.freelancerName || 'Freelancer';
+  const targetFreelancerHeadline = targetFreelancer?.headline || 'SkillNest Professional';
+  const targetFreelancerLocation = targetFreelancer?.location || 'Boisar & Palghar Local Network';
+  const targetFreelancerAvatar = targetFreelancer?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80';
 
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +36,7 @@ export const ClientMessagesPage: React.FC = () => {
       title="Messages & Contact Requests"
       subtitle="Direct 1-on-1 communication with local professionals in Boisar, Palghar & Tarapur"
     >
-      {inquiries.length === 0 ? (
+      {myInquiries.length === 0 ? (
         <GlassCard className="p-12 text-center max-w-md mx-auto space-y-3">
           <MessageSquare className="w-8 h-8 text-neutral-400 mx-auto" />
           <h4 className="text-base font-bold text-neutral-900 dark:text-white">No active conversations yet</h4>
@@ -51,13 +55,15 @@ export const ClientMessagesPage: React.FC = () => {
           {/* Left Column: Conversation List */}
           <div className="lg:col-span-5 space-y-2">
             <p className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-2">
-              Active Threads ({myInquiries.length > 0 ? myInquiries.length : inquiries.length})
+              Active Threads ({myInquiries.length})
             </p>
 
             <div className="space-y-2">
-              {(myInquiries.length > 0 ? myInquiries : inquiries).map((inq) => {
+              {myInquiries.map((inq) => {
                 const fl = freelancers.find(f => f.id === inq.freelancerId);
                 const isSelected = inq.id === activeInquiry?.id;
+                const flName = fl?.name || (inq as any).freelancerName || 'Freelancer';
+                const flAvatar = fl?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80';
 
                 return (
                   <button
@@ -72,12 +78,12 @@ export const ClientMessagesPage: React.FC = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
                         <img
-                          src={fl?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}
-                          alt={fl?.name || 'Freelancer'}
+                          src={flAvatar}
+                          alt={flName}
                           className="w-9 h-9 rounded-xl object-cover shrink-0 border border-neutral-200 dark:border-neutral-700"
                         />
                         <div>
-                          <p className="font-bold text-neutral-900 dark:text-white text-xs">{fl?.name || inq.clientName}</p>
+                          <p className="font-bold text-neutral-900 dark:text-white text-xs">{flName}</p>
                           <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate max-w-[170px]">{inq.projectTitle}</p>
                         </div>
                       </div>
@@ -99,16 +105,16 @@ export const ClientMessagesPage: React.FC = () => {
               <div className="pb-4 border-b border-neutral-200 dark:border-white/10 flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <img
-                    src={targetFreelancer?.avatar}
-                    alt={targetFreelancer?.name}
+                    src={targetFreelancerAvatar}
+                    alt={targetFreelancerName}
                     className="w-11 h-11 rounded-xl object-cover border border-neutral-200 dark:border-neutral-700"
                   />
                   <div>
-                    <h3 className="font-bold text-neutral-900 dark:text-white text-sm">{targetFreelancer?.name}</h3>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{targetFreelancer?.headline}</p>
+                    <h3 className="font-bold text-neutral-900 dark:text-white text-sm">{targetFreelancerName}</h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{targetFreelancerHeadline}</p>
                     <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-0.5">
                       <MapPin className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-neutral-700 dark:text-neutral-300">{targetFreelancer?.location}</span>
+                      <span className="text-neutral-700 dark:text-neutral-300">{targetFreelancerLocation}</span>
                       <span>·</span>
                       <span>Meeting: <strong className="text-neutral-800 dark:text-neutral-200 font-semibold">{activeInquiry.meetingPreference}</strong></span>
                     </div>

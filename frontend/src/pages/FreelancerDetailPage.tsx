@@ -120,23 +120,35 @@ export const FreelancerDetailPage: React.FC = () => {
           {/* Pricing & CTA Card */}
           <div className="sm:text-right shrink-0 bg-neutral-50 dark:bg-neutral-800/60 p-4 sm:p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-3">
             <div>
-              <span className="text-[11px] text-neutral-500 dark:text-neutral-400 block">Starting Project Fee</span>
-              <p className="text-2xl font-bold text-neutral-900 dark:text-white tabular-nums">
-                ₹{freelancer.startingProjectRateInr.toLocaleString('en-IN')}
-              </p>
-              <p className="text-[11px] text-neutral-400 dark:text-neutral-500">or ₹{freelancer.hourlyRateInr}/hr (Direct)</p>
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400 block font-medium">
+                {freelancer.startingProjectRateInr > 0 ? 'Starting Project Fee' : 'Pricing Model'}
+              </span>
+              {freelancer.startingProjectRateInr > 0 ? (
+                <p className="text-2xl font-bold text-neutral-900 dark:text-white tabular-nums">
+                  ₹{freelancer.startingProjectRateInr.toLocaleString('en-IN')}
+                </p>
+              ) : (
+                <p className="text-base font-bold text-neutral-900 dark:text-white">
+                  Custom quote on enquiry
+                </p>
+              )}
+              {freelancer.hourlyRateInr > 0 ? (
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">or ₹{freelancer.hourlyRateInr}/hr (Direct)</p>
+              ) : (
+                <p className="text-[11px] text-neutral-400 dark:text-neutral-500">Flexible project-based engagements</p>
+              )}
             </div>
 
             <div className="flex sm:flex-col gap-2">
               <button
                 onClick={() => setInquiryOpen(true)}
-                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm text-center"
+                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm text-center cursor-pointer"
               >
                 Send Direct Enquiry
               </button>
               <button
                 onClick={() => toggleSaveFreelancer(freelancer.id)}
-                className={`w-full py-2 px-3 text-xs font-semibold rounded-lg border transition-colors flex items-center justify-center gap-1.5 ${
+                className={`w-full py-2 px-3 text-xs font-semibold rounded-lg border transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                   isSaved
                     ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300'
                     : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700'
@@ -182,28 +194,43 @@ export const FreelancerDetailPage: React.FC = () => {
           {/* Core Services Offered */}
           <section className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 p-6 space-y-4 transition-colors">
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">Services & Pricing Guide</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {freelancer.services.map((srv) => (
-                <div key={srv.id} className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/50 dark:bg-neutral-800/40 flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-neutral-900 dark:text-white">{srv.title}</h4>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 leading-relaxed">{srv.description}</p>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-neutral-200/60 dark:border-neutral-700/60 flex items-center justify-between text-xs">
+            {freelancer.services.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {freelancer.services.map((srv) => (
+                  <div key={srv.id} className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/50 dark:bg-neutral-800/40 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] text-neutral-400 dark:text-neutral-500 block">Typical Delivery</span>
-                      <span className="font-semibold text-neutral-800 dark:text-neutral-200">{srv.deliveryTimeDays} Days</span>
+                      <h4 className="text-sm font-bold text-neutral-900 dark:text-white">{srv.title}</h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 leading-relaxed">{srv.description}</p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[10px] text-neutral-400 dark:text-neutral-500 block">Starting At</span>
-                      <span className="font-bold text-neutral-900 dark:text-white tabular-nums">
-                        ₹{srv.startingPriceInr.toLocaleString('en-IN')}
-                      </span>
+                    <div className="mt-4 pt-3 border-t border-neutral-200/60 dark:border-neutral-700/60 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 block">Typical Delivery</span>
+                        <span className="font-semibold text-neutral-800 dark:text-neutral-200">{srv.deliveryTimeDays} Days</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 block">Starting At</span>
+                        <span className="font-bold text-neutral-900 dark:text-white tabular-nums">
+                          ₹{srv.startingPriceInr.toLocaleString('en-IN')}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800 text-center space-y-2">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Custom services and deliverables tailored to your exact business requirements. Send a direct enquiry with your project outline to receive an itemized proposal.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setInquiryOpen(true)}
+                  className="px-3.5 py-1.5 bg-indigo-600 text-white font-semibold rounded-lg text-xs hover:bg-indigo-700 transition-colors"
+                >
+                  Inquire for Custom Quote
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Portfolio Projects Showcase */}
@@ -213,39 +240,47 @@ export const FreelancerDetailPage: React.FC = () => {
               <span className="text-xs text-neutral-500 dark:text-neutral-400">{freelancer.portfolio.length} Projects shown</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {freelancer.portfolio.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setActivePortfolioModal(item)}
-                  className="group cursor-pointer rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-50 dark:bg-neutral-800/40 hover:shadow-md transition-all"
-                >
-                  <div className="h-44 overflow-hidden relative">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-2 right-2 bg-neutral-900/80 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded font-medium border border-neutral-700">
-                      {item.category}
+            {freelancer.portfolio.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {freelancer.portfolio.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => setActivePortfolioModal(item)}
+                    className="group cursor-pointer rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-50 dark:bg-neutral-800/40 hover:shadow-md transition-all"
+                  >
+                    <div className="h-44 overflow-hidden relative bg-neutral-100 dark:bg-neutral-800">
+                      <img
+                        src={item.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80'}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-2 right-2 bg-neutral-900/80 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded font-medium border border-neutral-700">
+                        {item.category}
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <h4 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                        {item.title}
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                        {item.description}
+                      </p>
+                      <div className="flex items-center justify-between text-[11px] text-neutral-400 dark:text-neutral-500 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <span>Client: {item.clientType || 'Local'}</span>
+                        <span>{item.completionYear || 'Recent'}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="p-4 space-y-2">
-                    <h4 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
-                      {item.description}
-                    </p>
-                    <div className="flex items-center justify-between text-[11px] text-neutral-400 dark:text-neutral-500 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                      <span>Client: {item.clientType}</span>
-                      <span>{item.completionYear}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800 text-center">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Portfolio work samples are currently being assembled. This specialist is active and accepting local business proposals.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Verified Local Client Reviews */}
@@ -254,33 +289,41 @@ export const FreelancerDetailPage: React.FC = () => {
               <h3 className="text-base font-bold text-neutral-900 dark:text-white">Local Business Reviews</h3>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                <span>{freelancer.rating}</span>
+                <span>{freelancer.rating > 0 ? freelancer.rating.toFixed(1) : 'New'}</span>
                 <span className="text-neutral-400 dark:text-neutral-500 font-normal">({freelancer.reviewCount} total reviews)</span>
               </div>
             </div>
 
-            <div className="space-y-4">
-              {freelancer.reviews.map((rev) => (
-                <div key={rev.id} className="p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/40 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-neutral-900 dark:text-white">{rev.clientName}</p>
-                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">{rev.clientCompany || rev.clientLocation}</p>
+            {freelancer.reviews.length > 0 ? (
+              <div className="space-y-4">
+                {freelancer.reviews.map((rev) => (
+                  <div key={rev.id} className="p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/40 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-neutral-900 dark:text-white">{rev.clientName}</p>
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400">{rev.clientCompany || rev.clientLocation}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-400">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                        <span>{rev.rating}.0</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-400">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                      <span>{rev.rating}.0</span>
-                    </div>
+                    <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
+                      "{rev.comment}"
+                    </p>
+                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">
+                      Project: {rev.projectTitle} · Verified Local Delivery
+                    </p>
                   </div>
-                  <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
-                    "{rev.comment}"
-                  </p>
-                  <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">
-                    Project: {rev.projectTitle} · Verified Local Delivery
-                  </p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800 text-center">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  No public reviews published yet. Be the first local business in Maharashtra to collaborate with this pro.
+                </p>
+              </div>
+            )}
           </section>
         </div>
 

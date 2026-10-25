@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createInquirySchema = z.object({
-  freelancerId: z.string().cuid('Invalid freelancer ID'),
+  freelancerId: z.string().min(1, 'Freelancer ID is required'),
   projectTitle: z.string().min(3).max(300),
   initialMessage: z.string().min(10, 'Message must be at least 10 characters').max(2000),
   proposedBudgetInr: z.number().int().positive().optional(),

@@ -26,11 +26,11 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-600/20',
-    secondary: 'bg-neutral-900 text-white hover:bg-neutral-800 shadow-sm shadow-neutral-900/10',
-    glass: 'bg-white/70 hover:bg-white/90 text-neutral-800 backdrop-blur-md border border-white/60 shadow-xs hover:border-neutral-300',
-    outline: 'bg-white text-neutral-700 hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400',
+    secondary: 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-sm shadow-neutral-900/10',
+    glass: 'bg-white/70 hover:bg-white/90 dark:bg-neutral-800/80 dark:hover:bg-neutral-850 text-neutral-800 dark:text-neutral-200 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-700/80 shadow-xs hover:border-neutral-300 dark:hover:border-neutral-600',
+    outline: 'bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-600',
     danger: 'bg-rose-600 text-white hover:bg-rose-700 shadow-sm shadow-rose-600/20',
-    ghost: 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100',
+    ghost: 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800',
   };
 
   return (

@@ -20,8 +20,22 @@ import {
 import { heroMarketplace } from '../assets/images';
 
 export const HomePage: React.FC = () => {
-  const { freelancers } = useApp();
+  const { freelancers, currentUser, currentFreelancerProfile } = useApp();
   const navigate = useNavigate();
+
+  const isFreelancer = currentUser?.role === 'freelancer';
+  const isClient = currentUser?.role === 'client';
+
+  // Check freelancer profile completeness
+  const isProfileComplete = Boolean(
+    currentFreelancerProfile &&
+    currentFreelancerProfile.headline?.trim() &&
+    currentFreelancerProfile.skills &&
+    currentFreelancerProfile.skills.length >= 3 &&
+    currentFreelancerProfile.portfolio &&
+    currentFreelancerProfile.portfolio.length > 0 &&
+    (Number(currentFreelancerProfile.startingProjectRateInr) > 0 || Number(currentFreelancerProfile.hourlyRateInr) > 0)
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArea, setSelectedArea] = useState('All');
@@ -33,8 +47,13 @@ export const HomePage: React.FC = () => {
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.append('q', searchQuery.trim());
     if (selectedArea !== 'All') params.append('area', selectedArea);
-    if (selectedCategory !== 'All') params.append('category', selectedCategory);
-    navigate(`/freelancers?${params.toString()}`);
+
+    if (isFreelancer) {
+      navigate(`/projects?${params.toString()}`);
+    } else {
+      if (selectedCategory !== 'All') params.append('category', selectedCategory);
+      navigate(`/freelancers?${params.toString()}`);
+    }
   };
 
   const featuredFreelancers = freelancers.slice(0, 3);
@@ -47,36 +66,106 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Proposition & CTA */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/60">
-                <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Local-First Freelance Network · Boisar, Palghar & Maharashtra</span>
-              </div>
+              {isFreelancer ? (
+                <>
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/60">
+                    <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Freelancer Hub · Boisar, Palghar & Industrial MIDC</span>
+                  </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-[1.12] text-balance">
-                Find the Right Talent, <br className="hidden sm:inline" />
-                <span className="text-indigo-600 dark:text-indigo-400">Right Around You.</span>
-              </h1>
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-[1.12] text-balance">
+                    Showcase Your Skills, <br className="hidden sm:inline" />
+                    <span className="text-indigo-600 dark:text-indigo-400">Win Local Projects.</span>
+                  </h1>
 
-              <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
-                Connect with skilled local freelancers and teams for your next project. Compare real portfolios, discover nearby professionals in Boisar and Palghar, and work together on your terms.
-              </p>
+                  <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
+                    Discover verified project opportunities across Boisar, Palghar, and Tarapur MIDC. Submit quotes, showcase your authentic portfolio, and work directly with local businesses.
+                  </p>
 
-              {/* Primary & Secondary CTAs */}
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Link
-                  to="/freelancers"
-                  className="px-6 py-3.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-600/10 transition-all flex items-center gap-2"
-                >
-                  <span>Find a Freelancer</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/signup?role=freelancer"
-                  className="px-6 py-3.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
-                >
-                  Join as a Freelancer
-                </Link>
-              </div>
+                  {/* Freelancer Primary & Secondary CTAs */}
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Link
+                      to="/projects"
+                      className="px-6 py-3.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-600/10 transition-all flex items-center gap-2"
+                    >
+                      <span>Browse Projects</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      to={isProfileComplete ? '/freelancer/portfolio' : '/freelancer/profile'}
+                      className="px-6 py-3.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
+                    >
+                      {isProfileComplete ? 'Manage Portfolio' : 'Complete My Profile'}
+                    </Link>
+                  </div>
+                </>
+              ) : isClient ? (
+                <>
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/60">
+                    <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Local-First Business Network · Boisar & Palghar District</span>
+                  </div>
+
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-[1.12] text-balance">
+                    Find Verified Local Talent, <br className="hidden sm:inline" />
+                    <span className="text-indigo-600 dark:text-indigo-400">Right Around You.</span>
+                  </h1>
+
+                  <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
+                    Connect with skilled local freelancers and teams for your business requirements. Compare real portfolios, discover nearby professionals in Boisar and Palghar, and hire with confidence.
+                  </p>
+
+                  {/* Client Primary & Secondary CTAs */}
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Link
+                      to="/freelancers"
+                      className="px-6 py-3.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-600/10 transition-all flex items-center gap-2"
+                    >
+                      <span>Find a Freelancer</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      to="/post-project"
+                      className="px-6 py-3.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
+                    >
+                      Post a Project
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/60">
+                    <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Local-First Freelance Network · Boisar, Palghar & Maharashtra</span>
+                  </div>
+
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-[1.12] text-balance">
+                    Find the Right Talent, <br className="hidden sm:inline" />
+                    <span className="text-indigo-600 dark:text-indigo-400">Right Around You.</span>
+                  </h1>
+
+                  <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
+                    Connect with skilled local freelancers and teams for your next project. Compare real portfolios, discover nearby professionals in Boisar and Palghar, and work together on your terms.
+                  </p>
+
+                  {/* Guest Primary & Secondary CTAs */}
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Link
+                      to="/freelancers"
+                      className="px-6 py-3.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-600/10 transition-all flex items-center gap-2"
+                    >
+                      <span>Find a Freelancer</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      to="/signup?role=freelancer"
+                      className="px-6 py-3.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
+                    >
+                      Join as a Freelancer
+                    </Link>
+                  </div>
+                </>
+              )}
 
               {/* Integrated Search Box */}
               <form 
@@ -89,7 +178,11 @@ export const HomePage: React.FC = () => {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Skill or service (e.g. React, Logo, SEO)..."
+                    placeholder={
+                      isFreelancer
+                        ? 'Search open projects by skill or title (e.g. React, CAD)...'
+                        : 'Skill or service (e.g. React, Logo, SEO)...'
+                    }
                     className="w-full text-xs pl-6 pr-2 py-2 outline-none text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 bg-transparent"
                   />
                 </div>
@@ -111,9 +204,9 @@ export const HomePage: React.FC = () => {
                 <div className="sm:col-span-4 flex items-center">
                   <button
                     type="submit"
-                    className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-neutral-900 dark:bg-indigo-600 rounded-xl hover:bg-neutral-800 dark:hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-neutral-900 dark:bg-indigo-600 rounded-xl hover:bg-neutral-800 dark:hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>Search Nearby</span>
+                    <span>{isFreelancer ? 'Search Projects' : 'Search Nearby'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -520,18 +613,52 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <Link
-              to="/post-project"
-              className="px-6 py-3 text-xs font-semibold text-neutral-950 bg-white rounded-xl hover:bg-neutral-100 transition-colors shadow-sm"
-            >
-              Post a Project Requirement
-            </Link>
-            <Link
-              to="/freelancers"
-              className="px-6 py-3 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-            >
-              Explore Freelancers
-            </Link>
+            {isFreelancer ? (
+              <>
+                <Link
+                  to="/projects"
+                  className="px-6 py-3 text-xs font-semibold text-neutral-950 bg-white rounded-xl hover:bg-neutral-100 transition-colors shadow-sm"
+                >
+                  Browse Open Projects
+                </Link>
+                <Link
+                  to={isProfileComplete ? '/freelancer/portfolio' : '/freelancer/profile'}
+                  className="px-6 py-3 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                  {isProfileComplete ? 'Manage Portfolio' : 'Complete My Profile'}
+                </Link>
+              </>
+            ) : isClient ? (
+              <>
+                <Link
+                  to="/post-project"
+                  className="px-6 py-3 text-xs font-semibold text-neutral-950 bg-white rounded-xl hover:bg-neutral-100 transition-colors shadow-sm"
+                >
+                  Post a Project Requirement
+                </Link>
+                <Link
+                  to="/freelancers"
+                  className="px-6 py-3 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                  Explore Freelancers
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/freelancers"
+                  className="px-6 py-3 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                  Find a Freelancer
+                </Link>
+                <Link
+                  to="/signup?role=freelancer"
+                  className="px-6 py-3 text-xs font-semibold text-neutral-950 bg-white rounded-xl hover:bg-neutral-100 transition-colors shadow-sm"
+                >
+                  Join as a Freelancer
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

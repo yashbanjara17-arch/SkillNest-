@@ -6,14 +6,12 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { MessageSquare, Send, MapPin, Mail, Phone, Calendar } from 'lucide-react';
 
 export const FreelancerInquiriesPage: React.FC = () => {
-  const { inquiries, currentUser, freelancers, replyToInquiry } = useApp();
+  const { inquiries, currentUser, currentFreelancerProfile, replyToInquiry } = useApp();
 
-  const myProfile = freelancers.find(
-    f => f.name === currentUser?.name || f.id === currentUser?.id
-  ) || freelancers[0];
+  const myProfileId = currentFreelancerProfile?.id || `fl-${currentUser?.id}`;
 
   const receivedInquiries = inquiries.filter(
-    inq => inq.freelancerId === myProfile.id
+    inq => inq.freelancerId === myProfileId || inq.freelancerId === currentUser?.id || (inq as any).freelancerName === currentUser?.name
   );
 
   const [activeInquiryId, setActiveInquiryId] = useState<string>(
@@ -132,7 +130,7 @@ export const FreelancerInquiriesPage: React.FC = () => {
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Reply with your availability or suggested discussion time..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-300 dark:border-white/10 text-neutral-900 dark:text-white placeholder:text-neutral-400 text-xs outline-none focus:border-indigo-500"
+                  className="sn-input flex-1 text-xs"
                 />
                 <button
                   type="submit"

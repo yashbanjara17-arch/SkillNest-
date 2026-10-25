@@ -5,8 +5,10 @@ import {
   getFreelancerByUserId,
   updateFreelancerProfile,
   addPortfolioItem,
+  updatePortfolioItem,
   deletePortfolioItem,
   addService,
+  updateService,
   deleteService,
 } from './freelancers.service';
 
@@ -46,6 +48,13 @@ export async function addPortfolio(req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 }
 
+export async function updatePortfolio(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await updatePortfolioItem(req.session.userId!, req.params.itemId, req.body);
+    res.json({ success: true, data });
+  } catch (err) { next(err); }
+}
+
 export async function removePortfolio(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     await deletePortfolioItem(req.session.userId!, req.params.itemId);
@@ -57,6 +66,13 @@ export async function addServiceHandler(req: Request, res: Response, next: NextF
   try {
     const data = await addService(req.session.userId!, req.body);
     res.status(201).json({ success: true, data });
+  } catch (err) { next(err); }
+}
+
+export async function updateServiceHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await updateService(req.session.userId!, req.params.serviceId, req.body);
+    res.json({ success: true, data });
   } catch (err) { next(err); }
 }
 

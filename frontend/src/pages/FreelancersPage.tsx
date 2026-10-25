@@ -295,10 +295,10 @@ export const FreelancersPage: React.FC = () => {
       </div>
 
       {/* Results Count Banner */}
-      <div className="flex items-center justify-between text-xs text-neutral-500">
+      <div className="flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
         <p>
-          Showing <span className="font-bold text-neutral-900 tabular-nums">{filteredFreelancers.length}</span> verified local talent profiles
-          {selectedArea !== 'All' && <span> in <span className="font-semibold text-neutral-800">{selectedArea}</span></span>}
+          Showing <span className="font-bold text-neutral-900 dark:text-white tabular-nums">{filteredFreelancers.length}</span> verified local talent profiles
+          {selectedArea !== 'All' && <span> in <span className="font-semibold text-neutral-800 dark:text-neutral-200">{selectedArea}</span></span>}
         </p>
       </div>
 
@@ -316,13 +316,13 @@ export const FreelancersPage: React.FC = () => {
         </div>
       ) : (
         /* Empty State */
-        <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center max-w-lg mx-auto space-y-4">
-          <div className="w-12 h-12 bg-neutral-100 text-neutral-500 rounded-full flex items-center justify-center mx-auto">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-12 text-center max-w-lg mx-auto space-y-4 shadow-xs">
+          <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 rounded-full flex items-center justify-center mx-auto">
             <Search className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-neutral-900">No matching freelancers found</h3>
-            <p className="text-xs text-neutral-600 mt-1">
+            <h3 className="text-base font-bold text-neutral-900 dark:text-white">No matching freelancers found</h3>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
               Try adjusting your search criteria, clearing the location filter, or browsing all service categories.
             </p>
           </div>

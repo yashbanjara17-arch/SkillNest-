@@ -48,6 +48,7 @@ export interface FreelancerService {
 
 export interface Freelancer {
   id: string;
+  userId?: string;
   name: string;
   headline: string;
   bio: string;

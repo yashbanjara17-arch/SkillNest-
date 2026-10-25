@@ -270,8 +270,98 @@ All routes defined in `src/App.tsx`:
 - [x] Frontend production bundle build (`npm run build`) verified clean with 0 errors.
 - [x] Delivered root-level `STARTUP.md` with complete installation, configuration, database setup, execution, verification, and troubleshooting steps.
 
-### Phase 4: Gemini AI Integration (Future)
+### Phase 4: Account Identity, Dynamic Data & Conversation Persistence Fixes (Completed)
+- [x] **Root Cause 1 - Freelancer Identity Leak ("Rahul Sharma")**:
+  - *Cause*: In `AppContext.tsx`, newly registered users (e.g., "Mithu Don") did not exist in the in-memory `mockData.ts` array. Consequently, pages like `FreelancerDashboardPage`, `FreelancerProfilePage`, `FreelancerApplicationsPage`, `FreelancerInquiriesPage`, and `FreelancerPortfolioPage` fell back to `freelancers[0]`, displaying Rahul Sharma's seeded ratings, 95% profile strength, and portfolio.
+  - *Fix*: Created a dedicated `currentFreelancerProfile` state in `AppContext.tsx`, backed by `freelancersApi.getMe()` and `/api/auth/me`. Stripped all `|| freelancers[0]` fallbacks. Provided empty profile defaults (0 reviews, unverified, empty bio/skills) for newly registered accounts.
+  - *Dynamic Profile Strength*: Computed profile strength in `FreelancerDashboardPage` dynamically (0–100%) based on actual filled fields (headline, bio, skills, hourly rate, portfolio items).
+- [x] **Root Cause 2 - Conversation Persistence Across Sessions**:
+  - *Cause*:
+    1. `inquiries.schema.ts` strictly validated `freelancerId` with `.cuid()`, rejecting seed-style IDs (e.g. `fl-1`), causing inquiries created from directory cards to fail with 400 Bad Request before database insertion.
+    2. `inquiries.service.ts` had `take: 1` on messages, cutting off conversation thread history, and returned raw Prisma models without mapping to the frontend's expected `DirectInquiry` contract (`replies`, `clientName`, `clientEmail`, `meetingPreference`).
+    3. `AppContext.tsx` lacked automatic retrieval of persisted inquiries on session restoration (`authApi.me()`) and login.
+  - *Fix*: Relaxed `freelancerId` validation to `z.string().min(1)` in `inquiries.schema.ts`. Added automatic client profile creation if missing, resilient freelancer resolution (by profile ID, user ID, or seed ID prefix `fl-`), message history preservation, and full DTO transformation. Wired `inquiriesApi.mine()` into `syncUserData` on login and session restoration. All thread messages and replies are stored and retrieved from PostgreSQL. Participant authorization is enforced server-side (403 for unauthorized participants).
+- [x] **Root Cause 3 - Client Dashboard and Project Data Isolation**:
+  - *Cause*: In `ClientDashboardPage.tsx` and `ClientProjectsPage.tsx`, empty projects lists defaulted to `projects.slice(0, 3)` and counted other clients' proposals as the user's activity.
+  - *Fix*: Scoped all project queries, proposal counters, and message threads strictly to `currentUser.id`. Replaced mock slice fallbacks with clear, actionable empty states ("You haven't posted any projects yet" + "Post Your First Project" action).
+- [x] **Root Cause 4 - Proposal Submission Attribution**:
+  - *Fix*: In `AppContext.tsx:submitProposal`, replaced `freelancers.find(...) || freelancers[0]` with `currentFreelancerProfile` and `currentUser`, guaranteeing proposals submitted by fresh accounts (e.g., Mithu Don) are never attributed to Rahul Sharma.
+- [x] **Verification & Test Results**:
+  - Frontend production build (`npm run build`): Passed cleanly with 0 errors.
+  - Backend TypeScript compilation (`npm run typecheck`): Passed cleanly with 0 errors.
+  - Automated integration test suite (`npm test`): 18/18 tests passed.
+  - PostgreSQL database verified active with migrations applied.
+
+### Phase 5: Gemini AI Integration (Future)
 - [ ] Implement server-side Gemini API route (`/api/ai/project-assistant` or `/api/ai/match-explainer`) leveraging `@google/genai` to assist non-technical business owners in converting rough ideas into structured project scopes.
+
+### Phase 6: Light Theme Visibility, Profile Builder, Discovery Cards & Direct Photo Upload (Completed)
+- [x] **Light Theme Visibility & Contrast Overhaul**:
+  - *Root Cause*: Hardcoded dark utility classes (`bg-white/5`, `border-white/10`, `text-white`, `bg-neutral-900`) caused labels, input borders, placeholders, dropdowns, and cards to become invisible against the light mode background.
+  - *Fix*: Created centralized design tokens and reusable CSS classes in `frontend/src/index.css`: `.sn-input`, `.sn-textarea`, `.sn-select`, `.sn-label`, `.sn-helper`, `.sn-card-surface`, `.sn-card-subtle`, and `.sn-border-subtle`.
+  - Added full light/dark variants to `Badge.tsx`, `Button.tsx`, `GlassCard.tsx`, and form controls.
+  - Verified across `FreelancerProfilePage`, `ClientProfilePage`, `FreelancersPage`, `FreelancerDashboardPage`, `FreelancerApplicationsPage`, `FreelancerInquiriesPage`, and `FreelancerPortfolioPage`.
+  - Seamless instant theme switching without page reload.
+- [x] **Freelancer Profile Builder & Service Listing Overhaul**:
+  - Built organized tabbed builder in `FreelancerProfilePage.tsx`:
+    - **Basic Information**: Name, headline, location, bio, entity type toggle, and direct photo/logo upload.
+    - **Skills & Expertise**: Add/remove skill chips, category picker, experience years, and contact preferences.
+    - **Services Offered**: Full CRUD for service listings (title, category, description, deliverables, starting price in INR, delivery days).
+    - **Portfolio & Previous Work**: Polished work sample grid, add/edit/delete modals with broken-image graceful fallback.
+    - **Availability & Rates**: Project starting rates, hourly rates, availability status, and pricing model indicator.
+    - **Profile Readiness & Preview**: Live completion score (0–100%) with actionable checklist and live preview card.
+- [x] **Individual Specialists vs. Studio Teams**:
+  - Full support for both individual freelancers and agencies/studios (PixelCraft Studio).
+  - Studio profiles support team name, studio brand logo, team size, and member names/roles without corrupting individual freelancer accounts.
+- [x] **Freelancer Discovery Card Upgrades**:
+  - Detailed profiles (Rahul Sharma, PixelCraft Studio) showcase rich information, tags, ratings, and portfolio previews.
+  - Incomplete/new profiles (Mithu Don) display intentional states: "New Pro" badge, "Pricing on request", friendly setup reminder only for the profile owner, and initials avatar fallback.
+  - Zero fabricated data: No fake reviews, ratings, or verification badges.
+  - Uniform card heights (`min-h-[410px]`) with aligned footers.
+- [x] **Direct Photo Upload for Freelancers & Clients**:
+  - Created reusable `frontend/src/components/common/PhotoUpload.tsx`.
+  - Replaced raw URL inputs with direct device photo selection, drag-and-drop, and preview in both `FreelancerProfilePage` and `ClientProfilePage`.
+  - Automatic client-side canvas compression/resizing (max 600x600, ~50-80KB) for instant loading, zero payload bloat, and fast PostgreSQL persistence.
+  - Updated `clients.schema.ts` and `freelancers.schema.ts` to accept base64 data URLs.
+  - Increased backend Express body parser limit to 10MB in `app.ts`.
+  - Wired `updateClientProfile` into `AppContext.tsx` so client photos update globally in real time.
+- [x] **Verification & Test Suite**:
+  - Backend Typecheck (`npm run typecheck`): Passed with 0 errors.
+  - Backend Integration Tests (`npm test` via Vitest): 18/18 tests passed.
+  - Frontend Lint & Production Build (`npm run build`): Passed cleanly with 0 errors.
+
+### Phase 7: Role-Based Navigation & Landing Page CTAs (Completed)
+- [x] **Role-Based Public Navbar (`Navbar.tsx`)**:
+  - **Client**: Displays `Home`, `Find Freelancers`, `Browse Projects`, `How It Works`, and `Client Dashboard`. Primary action button: **Post a Project** (`/post-project`).
+  - **Freelancer**: Displays `Home`, `Browse Projects`, `How It Works`, and `Freelancer Hub`. Strict omission of "Find Freelancers" as a primary nav item. Primary action button adapts dynamically based on profile completion: **Complete My Profile** (`/freelancer/profile`) for setup-in-progress profiles, or **Manage Portfolio** (`/freelancer/portfolio`) for complete profiles.
+  - **Admin**: Displays `Home`, `Find Freelancers`, `Browse Projects`, `How It Works`, and `Admin Dashboard`. Client-only and freelancer-only primary action buttons are hidden.
+  - **Guest (Not Logged In)**: Displays `Find Freelancers`, `Browse Projects`, `How It Works`. Actions in Zone 3: `Sign In` (`/login`) and `Get Started` (`/signup`) with two-way dropdown for hiring talent or offering skills.
+  - **Mobile Drawer**: Synchronized role-aware nav links, appearance toggle, and role-specific primary actions.
+  - **Session & Logout Synchronization**: When logging out via the user menu, `currentUser` clears and the navbar immediately restores guest state without page reload.
+- [x] **Role-Aware Landing Page & Hero Section (`HomePage.tsx`)**:
+  - **Client View**:
+    - Regional Badge: `Local-First Business Network · Boisar & Palghar District`
+    - Headline: *"Find Verified Local Talent, Right Around You."*
+    - Subtitle: Focused on reviewing authentic portfolios, communicating directly, and hiring with confidence.
+    - Primary CTA: **Find a Freelancer** (`/freelancers`).
+    - Secondary CTA: **Post a Project** (`/post-project`).
+    - Integrated Hero Search: Searches freelancers by skill/service with location filter.
+  - **Freelancer View**:
+    - Regional Badge: `Freelancer Hub · Boisar, Palghar & Industrial MIDC`
+    - Headline: *"Showcase Your Skills, Win Local Projects."*
+    - Subtitle: Focused on discovering verified project opportunities in Boisar/Palghar/MIDC, submitting quotes, and collaborating with local businesses.
+    - Primary CTA: **Browse Projects** (`/projects`) — does not encourage hiring other freelancers.
+    - Secondary CTA: **Complete My Profile** (`/freelancer/profile`) or **Manage Portfolio** (`/freelancer/portfolio`).
+    - Integrated Hero Search: Searches open project requirements by skill/title with location filter.
+  - **Guest View**:
+    - Preserves general marketplace headline: *"Find the Right Talent, Right Around You."*
+    - Primary CTA: **Find a Freelancer** (`/freelancers`).
+    - Secondary CTA: **Join as a Freelancer** (`/signup?role=freelancer`).
+  - **Final CTA Section**: Role-adapted buttons for clients, freelancers, and guests.
+- [x] **Verification & Test Results**:
+  - Frontend production build (`npm run build`): Passed cleanly with 0 errors.
+  - Backend TypeScript compilation (`npm run typecheck`): Passed cleanly with 0 errors.
+  - Automated integration test suite (`npm test`): 18/18 tests passed.
 
 
 

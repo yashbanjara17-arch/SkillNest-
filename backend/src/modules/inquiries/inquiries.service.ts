@@ -23,71 +23,152 @@ async function verifyInquiryAccess(userId: string, inquiryId: string) {
   return inquiry;
 }
 
-export async function createInquiry(userId: string, input: CreateInquiryInput) {
-  const clientProfile = await prisma.clientProfile.findUnique({ where: { userId } });
-  if (!clientProfile) throw createError('Client profile not found', 404);
+const meetingMap: Record<string, 'In-person (Local)' | 'Phone Call' | 'Video Meeting'> = {
+  InPersonLocal: 'In-person (Local)',
+  PhoneCall: 'Phone Call',
+  VideoMeeting: 'Video Meeting',
+};
 
-  const freelancer = await prisma.freelancerProfile.findUnique({
+const statusMap: Record<string, 'Unread' | 'Replied' | 'Deal Agreed'> = {
+  Unread: 'Unread',
+  Replied: 'Replied',
+  DealAgreed: 'Deal Agreed',
+};
+
+function formatInquiry(inq: any) {
+  const meetingPref = meetingMap[inq.meetingPreference] || 'In-person (Local)';
+  const status = statusMap[inq.status] || 'Unread';
+
+  return {
+    id: inq.id,
+    freelancerId: inq.freelancerId,
+    freelancerName: inq.freelancer?.user?.name || inq.freelancer?.headline || 'Freelancer',
+    freelancerAvatar: inq.freelancer?.user?.avatarUrl || inq.freelancer?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    freelancerLocation: inq.freelancer?.location || inq.freelancer?.areaName || 'Boisar, Maharashtra',
+    clientId: inq.clientProfile?.userId || inq.clientProfileId,
+    clientName: inq.clientProfile?.user?.name || 'Local Business Client',
+    clientEmail: inq.clientProfile?.user?.email || '',
+    clientPhone: inq.clientProfile?.user?.phone || undefined,
+    projectTitle: inq.projectTitle,
+    initialMessage: inq.initialMessage,
+    proposedBudgetInr: inq.proposedBudgetInr ?? undefined,
+    meetingPreference: meetingPref,
+    createdAt: inq.createdAt ? inq.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    status,
+    replies: (inq.messages || []).map((m: any) => ({
+      senderId: m.senderId,
+      senderName: m.sender?.name || (m.senderId === inq.clientProfile?.userId ? inq.clientProfile?.user?.name : inq.freelancer?.user?.name) || 'User',
+      message: m.content,
+      sentAt: m.sentAt ? m.sentAt.toISOString().replace('T', ' ').substring(0, 16) : new Date().toISOString().replace('T', ' ').substring(0, 16),
+    })),
+  };
+}
+
+export async function createInquiry(userId: string, input: CreateInquiryInput) {
+  let clientProfile = await prisma.clientProfile.findUnique({ where: { userId } });
+  if (!clientProfile) {
+    clientProfile = await prisma.clientProfile.create({
+      data: { userId },
+    });
+  }
+
+  // Look up freelancer either by profile id OR by userId
+  let freelancer = await prisma.freelancerProfile.findUnique({
     where: { id: input.freelancerId },
+    include: { user: true },
   });
+  if (!freelancer) {
+    freelancer = await prisma.freelancerProfile.findUnique({
+      where: { userId: input.freelancerId },
+      include: { user: true },
+    });
+  }
+
+  // Fallback for mock IDs from seed (e.g. 'fl-1', 'fl-2')
+  if (!freelancer && input.freelancerId.startsWith('fl-')) {
+    const allFreelancers = await prisma.freelancerProfile.findMany({
+      include: { user: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const index = parseInt(input.freelancerId.replace('fl-', ''), 10) - 1;
+    if (index >= 0 && index < allFreelancers.length) {
+      freelancer = allFreelancers[index];
+    }
+  }
+
   if (!freelancer) throw createError('Freelancer not found', 404);
 
   const inquiry = await prisma.$transaction(async (tx) => {
     const created = await tx.inquiry.create({
       data: {
-        freelancerId: input.freelancerId,
+        freelancerId: freelancer.id,
         clientProfileId: clientProfile.id,
         projectTitle: input.projectTitle,
         initialMessage: input.initialMessage,
         proposedBudgetInr: input.proposedBudgetInr,
         meetingPreference: input.meetingPreference,
       },
+      include: {
+        freelancer: { include: { user: true } },
+        clientProfile: { include: { user: true } },
+      },
     });
 
     // Create the initial message
-    await tx.message.create({
+    const msg = await tx.message.create({
       data: {
         inquiryId: created.id,
         senderId: userId,
         content: input.initialMessage,
       },
+      include: {
+        sender: { select: { id: true, name: true } },
+      },
     });
 
-    return created;
+    return {
+      ...created,
+      messages: [msg],
+    };
   });
 
-  return inquiry;
+  return formatInquiry(inquiry);
 }
 
 export async function getMyInquiries(userId: string, role: string) {
+  const inquiryInclude = {
+    freelancer: {
+      include: { user: { select: { id: true, name: true, avatarUrl: true, location: true } } },
+    },
+    clientProfile: {
+      include: { user: { select: { id: true, name: true, avatarUrl: true, email: true, phone: true } } },
+    },
+    messages: {
+      include: { sender: { select: { id: true, name: true } } },
+      orderBy: { sentAt: 'asc' as const },
+    },
+  };
+
   if (role === 'client') {
     const profile = await prisma.clientProfile.findUnique({ where: { userId } });
     if (!profile) return [];
 
-    return prisma.inquiry.findMany({
+    const list = await prisma.inquiry.findMany({
       where: { clientProfileId: profile.id },
-      include: {
-        freelancer: {
-          include: { user: { select: { name: true, avatarUrl: true } } },
-        },
-        messages: { orderBy: { sentAt: 'asc' }, take: 1 },
-      },
+      include: inquiryInclude,
       orderBy: { updatedAt: 'desc' },
     });
+    return list.map(formatInquiry);
   } else if (role === 'freelancer') {
     const profile = await prisma.freelancerProfile.findUnique({ where: { userId } });
     if (!profile) return [];
 
-    return prisma.inquiry.findMany({
+    const list = await prisma.inquiry.findMany({
       where: { freelancerId: profile.id },
-      include: {
-        clientProfile: {
-          include: { user: { select: { name: true, avatarUrl: true } } },
-        },
-        messages: { orderBy: { sentAt: 'asc' }, take: 1 },
-      },
+      include: inquiryInclude,
       orderBy: { updatedAt: 'desc' },
     });
+    return list.map(formatInquiry);
   }
 
   return [];

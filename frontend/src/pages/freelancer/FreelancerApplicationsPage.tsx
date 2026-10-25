@@ -7,14 +7,10 @@ import { FileText, Search, Clock, IndianRupee, MapPin, ArrowRight } from 'lucide
 import { EmptyState } from '../../components/ui/EmptyState';
 
 export const FreelancerApplicationsPage: React.FC = () => {
-  const { proposals, projects, currentUser, freelancers } = useApp();
-
-  const myProfile = freelancers.find(
-    f => f.name === currentUser?.name || f.id === currentUser?.id
-  ) || freelancers[0];
+  const { proposals, projects, currentUser, currentFreelancerProfile } = useApp();
 
   const myProposals = proposals.filter(
-    p => p.freelancerName === currentUser?.name || p.freelancerId === myProfile.id
+    p => p.freelancerName === currentUser?.name || p.freelancerId === currentFreelancerProfile?.id
   );
 
   return (

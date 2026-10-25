@@ -4,12 +4,13 @@ import { registerUser, loginUser, getUserById } from './auth.service';
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = await registerUser(req.body);
+    const fullUser = await getUserById(user.id as string);
 
     req.session.userId = user.id as string;
     req.session.userRole = user.role as string;
     req.session.userEmail = user.email as string;
 
-    res.status(201).json({ success: true, data: user });
+    res.status(201).json({ success: true, data: fullUser || user });
   } catch (err) {
     next(err);
   }
@@ -18,12 +19,13 @@ export async function register(req: Request, res: Response, next: NextFunction):
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = await loginUser(req.body);
+    const fullUser = await getUserById(user.id as string);
 
     req.session.userId = user.id as string;
     req.session.userRole = user.role as string;
     req.session.userEmail = user.email as string;
 
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: fullUser || user });
   } catch (err) {
     next(err);
   }
